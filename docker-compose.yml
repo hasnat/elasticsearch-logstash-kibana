@@ -1,0 +1,124 @@
+
+version: '2'
+
+
+services:
+
+  elasticsearch:
+    restart: always
+    hostname: elasticsearch
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+    volumes:
+      - "${CONFIG_DIR}/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - "${DATA_DIR}/elasticsearch/data:/usr/share/elasticsearch/data"
+    user: '1000'
+    ports:
+      - "9200:9200"
+#      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx4096m -Xms256m"
+
+  logstash:
+    restart: always
+    hostname: logstash
+    container_name: logstash
+    build: dockerfiles/logstash
+    volumes:
+      - "${CONFIG_DIR}/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml"
+      - "${CONFIG_DIR}/logstash/config/jvm.options:/usr/share/logstash/config/jvm.options"
+      - "${CONFIG_DIR}/logstash/templates:/usr/share/logstash/templates"
+      - "${CONFIG_DIR}/logstash/pipeline:/usr/share/logstash/pipeline"
+      - "${DATA_DIR}/logstash/data/dead_letter_queue:/usr/share/logstash/data/dead_letter_queue"
+    ports:
+      - "5044:5044"
+#      - "12201:12201/udp"
+    environment:
+      LOG_LEVEL: "info" # or debug
+    # this is to restart logstash, as it has a tendency to loop around broken records
+    # dead letter queue here is not helping
+    # so we restart every 12 hours to clear broken records in logstash queue
+    # https://github.com/logstash-plugins/logstash-output-elasticsearch/pull/730
+    entrypoint: ""
+    command:
+      - timeout
+      - --signal=9
+      - "43200"
+      - /usr/local/bin/docker-entrypoint
+
+  kibana:
+    restart: always
+    hostname: kibana
+    container_name: kibana
+    build: dockerfiles/kibana
+    volumes:
+      - "${CONFIG_DIR}/kibana/config/:/usr/share/kibana/config"
+      - "${CONFIG_DIR}/kibana/plugins/:/usr/share/kibana-plugins"
+    environment:
+      VIRTUAL_HOST: "kibana.*"
+      VIRTUAL_PORT: 5601
+    ports:
+      - "5601:5601"
+
+  elastalert:
+    restart: always
+    hostname: elastalert
+    container_name: elastalert
+    image: bitsensor/elastalert
+    volumes:
+      - "${CONFIG_DIR}/elastalert/config/config.yaml:/opt/elastalert/config.yaml"
+      - "${CONFIG_DIR}/elastalert/email_auth.yaml:/opt/elastalert/email_auth.yaml"
+      - "${CONFIG_DIR}/elastalert/rules:/opt/elastalert/rules"
+      - "${CONFIG_DIR}/elastalert/ui/config.json:/opt/elastalert-server/config/config.json"
+    ports:
+      - "3030:3030"
+    entrypoint: ""
+    command:
+      - sh
+      - -c
+      - |
+          cd /opt/elastalert-server
+          nohup npm start &
+          python /opt/elastalert/elastalert/elastalert.py --debug --config /opt/elastalert/config.yaml
+
+  curator:
+    restart: always
+    hostname: curator
+    container_name: curator
+    image: bobrik/curator:5.4.0
+    entrypoint: ""
+    command:
+      - /bin/sh
+      - -c
+      - |
+          /usr/bin/curator --config /tmp/curator.yml /tmp/curator-actions.yml
+          sleep 86400
+    volumes:
+      - "${CONFIG_DIR}/curator:/tmp"
+
+  filebeat:
+    restart: always
+    hostname: filebeat
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:6.2.2
+    user: root
+    privileged: true
+    environment:
+      - BEAT_NAME=${BEAT_NAME}
+      - LOGSTASH_IP=logstash
+    # we don't want to start filbeat straight away as docker-compose might be in the middle of recreating containers
+    # and filbeat starts read locks on log json files by which docker-compose is unable to completely remove the container
+    entrypoint: ""
+    command:
+      - /bin/sh
+      - -c
+      - |
+          sleep 60
+          /usr/local/bin/docker-entrypoint -e
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${CONFIG_DIR}/filebeat/prospectors:/usr/share/filebeat/prospectors:ro"
+      - "${CONFIG_DIR}/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+#      - "/var/log:/var/log:ro"
+#      - "/var/log/generator:/var/log/generator:ro"

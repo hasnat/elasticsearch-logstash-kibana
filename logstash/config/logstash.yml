@@ -1,0 +1,8 @@
+config.reload.automatic: true
+config.reload.interval: 60
+dead_letter_queue.enable: true
+http.host: 0.0.0.0
+log.level: info
+path.config: /usr/share/logstash/pipeline
+path.dead_letter_queue: /usr/share/logstash/data/dead_letter_queue
+xpack.monitoring.enabled: false

@@ -1,0 +1,30 @@
+name: '${BEAT_NAME}'
+filebeat:
+  # List of prospectors to fetch data.
+  prospectors: []
+
+  # Full Path to directory with additional prospector configuration files. Each file must end with .yml
+  # These config files must have the full filebeat config part inside, but only
+  # the prospector part is processed. All global options like spool_size are ignored.
+  # The config_dir MUST point to a different directory then where the main filebeat config file
+  config_dir: /usr/share/filebeat/prospectors
+# Configure what outputs to use when sending the data collected by the beat.
+# Multiple outputs may be used.
+output:
+  ### Logstash as output
+  logstash:
+    # The Logstash hosts
+    hosts: [ "${LOGSTASH_IP}:5044" ]
+    #template.enabled: true
+    #template.path: "/etc/filebeat/filebeat.template.json"
+    #index: "filebeat"
+# Logs go to docker container logs
+logging:
+  level: warning
+  to_files: false
+# we don't log filebeat. enable to_syslog to true and you'd be able to do docker logs -f filebeat
+  to_syslog: false
+  files:
+    path: /var/log/filebeat
+    name: filebeat.log
+    keepfiles: 7

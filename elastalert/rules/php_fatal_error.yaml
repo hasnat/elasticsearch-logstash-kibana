@@ -1,0 +1,23 @@
+name: "Production - PHP Fatal Errors"
+
+type: frequency
+
+num_events: 1
+
+timeframe:
+  hours: 1
+
+filter:
+- query:
+    query_string:
+      query: "(\"syntax error\" OR \"fatal error\") AND log_tags:php AND NOT beat.name:server_name"
+
+include:
+- "beat.name"
+- "log_tags"
+- "log_message"
+
+email:
+- "devops@email.com"
+
+import: '/opt/elastalert/rules/elasticsearch.conf'

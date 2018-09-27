@@ -1,0 +1,50 @@
+{
+  "mappings": {
+    "_default_": {
+      "_all": {
+        "enabled": true,
+        "norms": false
+      },
+      "dynamic_templates": [
+        {
+          "template1": {
+            "mapping": {
+              "ignore_above": 1024,
+              "type": "{dynamic_type}"
+            },
+            "match": "*"
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "message": {
+          "type": "text",
+          "index": "false"
+        },
+        "offset": {
+          "type": "long",
+          "doc_values": "true"
+        },
+        "level": {
+          "type": "keyword"
+        },
+        "thread": {
+          "type": "keyword"
+        },
+        "logger": {
+          "type": "keyword"
+        },
+        "version": {
+          "type": "keyword"
+        }
+      }
+    }
+  },
+  "settings": {
+    "index.refresh_interval": "5s"
+  },
+  "template": "filebeat-*"
+}

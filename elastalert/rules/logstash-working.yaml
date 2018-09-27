@@ -1,0 +1,26 @@
+# A test to destinguish if logstash is perfoming as expected
+name: Logtash Not Performing
+
+type: flatline
+
+threshold: 100
+
+timeframe:
+  minutes: 30
+
+realert:
+  hours: 1
+
+use_count_query: true
+doc_type: logs
+
+filter:
+- query:
+    query_string:
+      query: "log_tags:some_tag"
+
+email:
+- "hasnat.ullah@gmail.com"
+# - "email2@email.com"
+
+import: '/opt/elastalert/rules/elasticsearch.conf'
