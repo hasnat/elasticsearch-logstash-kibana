@@ -14,7 +14,8 @@ output:
   ### Logstash as output
   logstash:
     # The Logstash hosts
-    hosts: [ "${LOGSTASH_IP}:5044" ]
+    hosts: ["${LOGSTASH_HOSTS}"]
+    bulk_max_size: 1024
     #template.enabled: true
     #template.path: "/etc/filebeat/filebeat.template.json"
     #index: "filebeat"

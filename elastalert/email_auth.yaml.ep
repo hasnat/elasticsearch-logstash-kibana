@@ -1,0 +1,2 @@
+user: "${EMAIL_USER}"
+password: "${EMAIL_PASSWORD}"

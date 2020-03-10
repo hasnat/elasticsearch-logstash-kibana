@@ -1,0 +1,20 @@
+
+version: '2.4'
+
+
+services:
+
+  elasticsearch:
+    build: elasticsearch
+
+  logstash:
+    build: logstash
+
+  kibana:
+    build: kibana
+
+  elastalert:
+    build: elastalert
+
+  curator:
+    build: curator

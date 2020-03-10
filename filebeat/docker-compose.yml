@@ -1,0 +1,21 @@
+version: '2.4'
+
+services:
+
+  filebeat:
+    restart: always
+    hostname: filebeat
+    container_name: filebeat
+    image: ${DOCKER_REGISTRY}filebeat
+    privileged: true
+    environment:
+      - BEAT_NAME=${HOST_NAME}
+      - LOGSTASH_HOSTS=${LOGSTASH_HOSTS}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "/var/log:/var/log:ro"
+      - "/var/openx/events:/var/openx/events:ro"
+      - "/var/openx/shared:/var/openx/shared:ro"
+      - "/opt/spark/work:/opt/spark/work:ro"
+      - "/opt/spark/logs:/opt/spark/logs:ro"

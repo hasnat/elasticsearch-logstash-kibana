@@ -1,0 +1,23 @@
+filebeat:
+  prospectors:
+     -
+       paths:
+         - "/var/log/messages"
+       fields:
+         log_tags: ['syslog']
+       fields_under_root: true
+
+     -
+       type: docker
+       containers.ids: ['*']
+       fields:
+         log_tags: ['docker-containers']
+       fields_under_root: true
+       #paths:
+       #  - "/var/lib/docker/containers/*/*.log"
+       #document_type: "docker"
+       scan_frequency: 5s
+       #json.keys_under_root: true
+       #json.message_key: log
+       processors:
+         - add_docker_metadata: ~
